@@ -18,6 +18,11 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 34
+        build-tools-version: '35.0.0'
 
     - name: Set up Python
       uses: actions/setup-python@v5
