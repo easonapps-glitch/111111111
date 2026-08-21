@@ -19,29 +19,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Build with Buildozer Action
+      uses: ActionSprout/buildozer-action@v1.2.0
       with:
-        python-version: '3.10'
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev libsqlite3-dev build-essential
-        pip install --upgrade buildozer "cython<3.0.0"
-
-    - name: Link System Android SDK to Buildozer
-      run: |
-        # 直接引用 GitHub Runner 內建完善的 SDK
-        mkdir -p ~/.buildozer/android/platform
-        ln -s $ANDROID_HOME ~/.buildozer/android/platform/android-sdk
-        
-        # 自動同意授權
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
-
-    - name: Build APK with Buildozer
-      run: |
-        buildozer -v android debug
+        command: buildozer -v android debug
+        repository_root: .
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
