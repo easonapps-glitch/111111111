@@ -19,11 +19,31 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build with Buildozer Action
-      uses: ActionSprout/buildozer-action@v1.2.0
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        command: buildozer -v android debug
-        repository_root: .
+        python-version: '3.10'
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev libsqlite3-dev build-essential
+        pip install --upgrade buildozer "cython<3.0.0"
+
+    - name: Pre-install Android SDK & AIDL
+      run: |
+        # 1. 建立 Buildozer 的 SDK 目錄
+        mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/33.0.2
+        
+        # 2. 自動同意授權並透過 sdkmanager 安裝 build-tools
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;33.0.2" "platforms;android-33"
+        
+        # 3. 複製系統內建好的 build-tools 至 Buildozer 指定路徑
+        cp -r $ANDROID_HOME/build-tools/33.0.2/* ~/.buildozer/android/platform/android-sdk/build-tools/33.0.2/
+
+    - name: Build APK with Buildozer
+      run: |
+        buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
