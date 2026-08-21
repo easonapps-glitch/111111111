@@ -30,15 +30,21 @@ jobs:
         sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev libsqlite3-dev build-essential
         pip install --upgrade buildozer "cython<3.0.0"
 
-    - name: Fix AIDL path for Buildozer
+    - name: Initialize Android SDK & Install AIDL
       run: |
-        # 尋找系統內建的 aidl 檔並綁定到 PATH
-        AIDL_PATH=$(which aidl || find /usr/local/lib/android/sdk/build-tools -name aidl | head -n 1)
-        if [ -n "$AIDL_PATH" ]; then
-          mkdir -p ~/.local/bin
-          ln -s "$AIDL_PATH" ~/.local/bin/aidl
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        # 1. 強制 Buildozer 下載基本 Android SDK 目錄 structure
+        buildozer android debug || true
+        
+        # 2. 定位 SDK 目錄並手動補齊包含 aidl 的 build-tools
+        SDK_DIR="$HOME/.buildozer/android/platform/android-sdk"
+        if [ -d "$SDK_DIR/cmdline-tools/latest/bin" ]; then
+          SDKMANAGER="$SDK_DIR/cmdline-tools/latest/bin/sdkmanager"
+        else
+          SDKMANAGER=$(find $SDK_DIR -name sdkmanager | head -n 1)
         fi
+        
+        # 3. 安裝包含 aidl 的指定版本 build-tools
+        yes | $SDKMANAGER --sdk_root=$SDK_DIR "build-tools;30.0.3" "platforms;android-33"
 
     - name: Build APK with Buildozer
       run: |
