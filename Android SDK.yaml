@@ -1,0 +1,26 @@
+- name: Set up Android SDK
+  run: |
+    sudo apt-get update
+    sudo apt-get install -y android-sdk
+    # Install specific build-tools version (adjust version as needed)
+    ${ANDROID_HOME:-/usr/lib/android-sdk}/tools/bin/sdkmanager "build-tools;35.0.0"
+- name: Set up Android SDK
+  uses: android-actions/setup-android@v3
+  with:
+    api-level: 34
+    build-tools-version: '35.0.0'
+- name: Set up Java 17
+  uses: actions/setup-java@v4
+  with:
+    distribution: 'temurin'
+    java-version: '17'
+
+- name: Set up Android SDK
+  uses: android-actions/setup-android@v3
+  with:
+    api-level: 34
+    build-tools-version: '35.0.0'
+
+- name: Set up Python
+  uses: actions/setup-python@v5
+  ...
