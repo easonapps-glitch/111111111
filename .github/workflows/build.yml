@@ -13,6 +13,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Java 11
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -21,27 +27,17 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev libsqlite3-dev build-essential
+        sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev libsqlite3-dev build-essential
         pip install --upgrade buildozer "cython<3.0.0"
 
-    - name: Setup Android SDK & Accept Licenses
-      uses: android-actions/setup-android@v3
-
-    - name: Install Build-Tools & Link for Buildozer
+    - name: Build APK with Buildozer
       run: |
-        # 自動同意所有授權並安裝所需套件
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;33.0.2" "platforms;android-33" "platform-tools"
-        
-        # 預先建立 Buildozer 的 SDK 路徑並做軟連結，讓 Buildozer 直接抓到 AIDL
-        mkdir -p /home/runner/.buildozer/android/platform
-        ln -s $ANDROID_HOME /home/runner/.buildozer/android/platform/android-sdk
-
-    - name: Build APK
-      run: |
-        # 預先同意 android 授權
+        # 預先為 Android SDK 建立授權同意目錄與設定
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
-        yes | buildozer -v android debug
+        
+        # 執行打包 (自動接受 SDK 授權)
+        buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
