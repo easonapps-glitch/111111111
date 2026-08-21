@@ -13,11 +13,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Java 11
+    - name: Set up Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '11'
+        java-version: '17'
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -30,18 +30,15 @@ jobs:
         sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev libsqlite3-dev build-essential
         pip install --upgrade buildozer "cython<3.0.0"
 
-    - name: Setup Android Commandline Tools & AIDL
+    - name: Fix AIDL path for Buildozer
       run: |
-        # 建立預設路徑並安裝 cmdline-tools
-        mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9441235_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip -d /tmp/cmdline-tools
-        mv /tmp/cmdline-tools/cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
-        rm cmdline-tools.zip
-
-        # 使用 sdkmanager 自動安裝 build-tools (包含 aidl) 與 platform 33
-        export PATH=$PATH:~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
-        yes | sdkmanager --sdk_root=/home/runner/.buildozer/android/platform/android-sdk "build-tools;33.0.2" "platforms;android-33" "platform-tools"
+        # 尋找系統內建的 aidl 檔並綁定到 PATH
+        AIDL_PATH=$(which aidl || find /usr/local/lib/android/sdk/build-tools -name aidl | head -n 1)
+        if [ -n "$AIDL_PATH" ]; then
+          mkdir -p ~/.local/bin
+          ln -s "$AIDL_PATH" ~/.local/bin/aidl
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        fi
 
     - name: Build APK with Buildozer
       run: |
