@@ -18,22 +18,30 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install dependencies & Android Tools
+    - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev libsqlite3-dev build-essential
         pip install --upgrade buildozer "cython<3.0.0"
 
-    - name: Setup Android SDK & Install AIDL
+    - name: Setup Android SDK & Accept Licenses
       uses: android-actions/setup-android@v3
 
-    - name: Install Build-Tools (AIDL)
+    - name: Install Build-Tools & Link for Buildozer
       run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;33.0.2" "platform-tools" "platforms;android-33"
+        # 自動同意所有授權並安裝所需套件
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;33.0.2" "platforms;android-33" "platform-tools"
+        
+        # 預先建立 Buildozer 的 SDK 路徑並做軟連結，讓 Buildozer 直接抓到 AIDL
+        mkdir -p /home/runner/.buildozer/android/platform
+        ln -s $ANDROID_HOME /home/runner/.buildozer/android/platform/android-sdk
 
     - name: Build APK
       run: |
-        buildozer -v android debug
+        # 預先同意 android 授權
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        yes | buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
